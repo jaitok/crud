@@ -1,6 +1,6 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import {isEmpty, size} from 'lodash'
-import shortid from 'shortid'
+import { addDocument, getCollection, updateDocument, deleteDocument } from './actions'
 
 
 function App() {
@@ -10,6 +10,16 @@ function App() {
   const  [editMode, setEditMode] = useState(false)
   const  [id, setId] = useState("")
   const  [error, setError] = useState(null)
+
+  useEffect(() => {
+    (async () => {
+      const result = await getCollection("tasks")
+      if(result.statusResponse){
+        setTasks(result.data)
+      }
+    })()
+  }, [])
+
 
   const validForm = () =>{
     let isValid = true
@@ -23,26 +33,34 @@ function App() {
     return isValid
 
   }
-  const addTask = (e) => {
+  const addTask = async (e) => {
     e.preventDefault()
     
     if (!validForm()){
       return
     }
 
-    const newTask ={
-      id: shortid.generate(),
-      name: task
-    }
-    
-    setTasks([...tasks, newTask])
+    const result = await addDocument("tasks", {name: task})
+    if(!result.statusResponse){
+      setError(result.error)
+      return 
+    }  
+   
+    setTasks([...tasks, {id: result.data.id, name:task }])
     setTask("")
   }
 
-  const saveTask = (e) => {
+  const saveTask = async(e) => {
     e.preventDefault()
     if (!validForm()){
       return
+    }
+    //const result1 = await getDocument("tasks",id);
+    //console.log(result1);
+    const result = await updateDocument("tasks",id, {name: task})
+    if(!result.statusResponse){
+      setError(result.error);
+      return;
     }
 
     const editedTasks = 
@@ -54,8 +72,14 @@ function App() {
 
   }
 
-  const deleteTask = (id) =>{
+  const deleteTask = async(id) =>{
     const filterTasks = tasks.filter(task => task.id !== id)
+
+    const result= await deleteDocument("tasks",id);
+    if(!result.statusResponse){
+      setError(result.error);
+      return;
+    }
     setTasks(filterTasks)
   }
 
@@ -75,7 +99,7 @@ function App() {
         <h4 className="text-center">Lista de tareas</h4>
 
         {     
-            size(tasks) == 0 ? (
+            size(tasks) === 0 ? (
               <li className="list-group-item "> Aun no hay tareas programadas...</li>
             ) : (
               <ul className="list-group">
