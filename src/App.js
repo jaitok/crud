@@ -31,16 +31,15 @@ function App() {
     }
 
     return isValid
-
   }
+
   const addTask = async (e) => {
     e.preventDefault()
-    
     if (!validForm()){
       return
     }
 
-    const result = await addDocument("tasks", {name: task})
+  const result = await addDocument("tasks", {name: task})
     if(!result.statusResponse){
       setError(result.error)
       return 
@@ -63,13 +62,12 @@ function App() {
       return;
     }
 
-    const editedTasks = 
+  const editedTasks = 
         tasks.map(item => item.id === id ? {id, name: task}: item)
     setTasks(editedTasks)    
     setEditMode(false)
     setTask("")
     setId("")
-
   }
 
   const deleteTask = async(id) =>{
